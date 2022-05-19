@@ -39,19 +39,19 @@ export async function extractRawLogsOnTopic(
 ): Promise<PersistedLog[]> {
   const logs = await getLogsBasedOnTopics(services, blocks, topics);
 
-  const blocksByHash = groupBy(blocks, 'hash');
+  const blocksByNumber = groupBy(blocks, 'number');
   const allTxs = uniqBy(
-    logs.map(l => ({ txHash: l.transactionHash!, blockHash: l.blockHash! })),
+    logs.map(l => ({ txHash: l.transactionHash!, blockNumber: l.blockNumber! })),
     'txHash',
   );
   const allStoredTxs = await Promise.all(
-    allTxs.map(tx => getOrCreateTx(services, tx.txHash, blocksByHash[tx.blockHash][0])),
+    allTxs.map(tx => getOrCreateTx(services, tx.txHash, blocksByNumber[tx.blockNumber][0])),
   );
   const allStoredTxsByTxHash = groupBy(allStoredTxs, 'hash');
 
   const logsToInsert = (await Promise.all(
     logs.map(async log => {
-      const _block = blocksByHash[log.blockHash!];
+      const _block = blocksByNumber[log.blockNumber!];
       if (!_block) {
         return;
       }
